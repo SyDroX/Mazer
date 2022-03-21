@@ -6,6 +6,21 @@
 #include "GameFramework/Actor.h"
 #include "GridCreator.generated.h"
 
+USTRUCT(BlueprintType)
+struct FBlockedRegion
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere)
+	int column;
+
+	UPROPERTY(EditAnywhere)
+	int row;
+
+	UPROPERTY(EditAnywhere)
+	int radius;
+};
+
 UCLASS()
 class MAZER_API AGridCreator : public AActor
 {
@@ -31,10 +46,13 @@ public:
 	UMaterial* CellWalkableMaterial;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "StaticMesh")
-	UMaterial* NonCellWalkableMaterial;
+	UMaterial* CellNonWalkableMaterial;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
 	TArray<UStaticMeshComponent*> PathGrid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+	TArray<FBlockedRegion> BlockedRegions;
 
 protected:
 	virtual void BeginPlay() override;
@@ -42,9 +60,9 @@ protected:
 	void InitializeGrid();
 	void CreateBlockedCenter();
 	void UpdateCells();
+	void SetBlockedRegions();
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
 };

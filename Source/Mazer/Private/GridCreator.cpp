@@ -1,6 +1,7 @@
 #include "GridCreator.h"
 #include "Components/StaticMeshComponent.h"
 #include "UObject/UnrealType.h"
+#include "GenericPlatform/GenericPlatformMath.h"
 
 // Sets default values
 AGridCreator::AGridCreator(const class FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
@@ -15,16 +16,7 @@ AGridCreator::AGridCreator(const class FObjectInitializer& ObjectInitializer) : 
 	GridHeight = 10;
 
 	InitializeGrid();
-	CreateBlockedCenter();
-}
-
-void AGridCreator::UpdateCells() 
-{
-	for (int i = 0; i < PathGrid.Num(); ++i)
-	{
-		PathGrid[i]->SetMaterial(0, CellWalkableMaterial);
-		PathGrid[i]->SetStaticMesh(CellMesh);
-	}
+	//CreateBlockedCenter();
 }
 	
 // Called when the game starts or when spawned
@@ -33,19 +25,31 @@ void AGridCreator::BeginPlay()
 	Super::BeginPlay();
 }
 
+
+// Called every frame
+void AGridCreator::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+
 void AGridCreator::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) 
 {
 	FName propertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 	TArray<FName> changedProps;
-	changedProps.Reserve(3);
+	changedProps.Reserve(7);
 	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, CellWalkableMaterial));
-	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, NonCellWalkableMaterial));
+	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, CellNonWalkableMaterial));
 	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, CellMesh));
+	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, BlockedRegions));
+	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(FBlockedRegion, radius));
+	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(FBlockedRegion, row));
+	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(FBlockedRegion, column));
 
 	if (changedProps.Contains(propertyName))
 	{
 		UpdateCells();
 		CreateBlockedCenter();
+		SetBlockedRegions();
 	}
 
 	Super::PostEditChangeProperty(PropertyChangedEvent);
@@ -85,6 +89,15 @@ void AGridCreator::InitializeGrid()
 	}
 }
 
+void AGridCreator::UpdateCells()
+{
+	for (int i = 0; i < PathGrid.Num(); ++i)
+	{
+		PathGrid[i]->SetMaterial(0, CellWalkableMaterial);
+		PathGrid[i]->SetStaticMesh(CellMesh);
+	}
+}
+
 void AGridCreator::CreateBlockedCenter()
 {
 	int centerX = GridWidth % 2 == 0 ? GridWidth / 2 - 1 : GridWidth / 2;
@@ -96,16 +109,27 @@ void AGridCreator::CreateBlockedCenter()
 		{
 			if (i * GridHeight + j < PathGrid.Num())
 			{
-				PathGrid[i * GridHeight + j]->SetMaterial(0, NonCellWalkableMaterial);
+				PathGrid[i * GridHeight + j]->SetMaterial(0, CellNonWalkableMaterial);
 			}
 		}
 	}
 }
 
-// Called every frame
-void AGridCreator::Tick(float DeltaTime)
+void AGridCreator::SetBlockedRegions()
 {
-	Super::Tick(DeltaTime);
-
+	for (int i = 0; i < BlockedRegions.Num(); ++i)
+	{
+		for (int j = FGenericPlatformMath::Max(BlockedRegions[i].row - BlockedRegions[i].radius, 0);
+			j <= FGenericPlatformMath::Min(BlockedRegions[i].row + BlockedRegions[i].radius, GridHeight - 1); ++j)
+		{
+			for (int k = FGenericPlatformMath::Max(BlockedRegions[i].column - BlockedRegions[i].radius, 0);
+				k <= FGenericPlatformMath::Min(BlockedRegions[i].column + BlockedRegions[i].radius, GridWidth - 1); ++k)
+			{
+				if (FGenericPlatformMath::Pow(BlockedRegions[i].row - j, 2) + FGenericPlatformMath::Pow(BlockedRegions[i].column - k, 2) <= FGenericPlatformMath::Pow(BlockedRegions[i].radius, 2))
+				{
+					PathGrid[j * GridHeight + k]->SetMaterial(0, CellNonWalkableMaterial);
+				}
+			}
+		}
+	}
 }
-
