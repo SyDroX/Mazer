@@ -15,10 +15,10 @@ public:
 	// Sets default values for this actor's properties
 	AGridCreator(const class FObjectInitializer& ObjectInitializer);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
 	int32 GridWidth;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
 	int32 GridHeight;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SceneRoot")
@@ -37,11 +37,11 @@ public:
 	TArray<UStaticMeshComponent*> PathGrid;
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 	void InitializeGrid();
 	void CreateBlockedCenter();
+	void UpdateCells();
 
 public:	
 	// Called every frame
