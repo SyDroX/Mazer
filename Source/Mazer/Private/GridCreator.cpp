@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "GridCreator.h"
 #include "Components/StaticMeshComponent.h"
 #include "UObject/UnrealType.h"
@@ -16,6 +13,18 @@ AGridCreator::AGridCreator(const class FObjectInitializer& ObjectInitializer) : 
 
 	GridWidth = 10;
 	GridHeight = 10;
+
+	InitializeGrid();
+	CreateBlockedCenter();
+}
+
+void AGridCreator::UpdateCells() 
+{
+	for (int i = 0; i < PathGrid.Num(); ++i)
+	{
+		PathGrid[i]->SetMaterial(0, CellWalkableMaterial);
+		PathGrid[i]->SetStaticMesh(CellMesh);
+	}
 }
 	
 // Called when the game starts or when spawned
@@ -29,13 +38,13 @@ void AGridCreator::PostEditChangeProperty(FPropertyChangedEvent& PropertyChanged
 	FName propertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 	TArray<FName> changedProps;
 	changedProps.Reserve(3);
-	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, GridHeight));
-	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, GridWidth));
-	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, PathGrid));
+	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, CellWalkableMaterial));
+	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, NonCellWalkableMaterial));
+	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(AGridCreator, CellMesh));
 
 	if (changedProps.Contains(propertyName))
 	{
-		InitializeGrid();
+		UpdateCells();
 		CreateBlockedCenter();
 	}
 
@@ -60,7 +69,7 @@ void AGridCreator::InitializeGrid()
 		for (int j = 0; j < GridWidth; ++j)
 		{
 			FName cellName = FName(TEXT("GridCell"), i * GridHeight + j);
-			UStaticMeshComponent* currentCellMesh = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass(), cellName);
+			UStaticMeshComponent* currentCellMesh = CreateDefaultSubobject<UStaticMeshComponent>(cellName);
 
 			if (IsValid(CellMesh) && IsValid(currentCellMesh))
 			{
