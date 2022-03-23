@@ -8,15 +8,18 @@ AGridCreator::AGridCreator(const class FObjectInitializer& ObjectInitializer) : 
 {
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
 
 	GridWidth = 10;
 	GridHeight = 10;
+	InitializeGrid();
+	UpdateNodes();
+	SetBlockedRegions();
 	//CreateBlockedCenter();
 }
-	
+
 // Called when the game starts or when spawned
 void AGridCreator::BeginPlay()
 {
@@ -32,7 +35,7 @@ void AGridCreator::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AGridCreator::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) 
+void AGridCreator::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	FName propertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 	TArray<FName> changedProps;
@@ -44,10 +47,10 @@ void AGridCreator::PostEditChangeProperty(FPropertyChangedEvent& PropertyChanged
 	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(FBlockedRegion, radius));
 	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(FVector2D, X));
 	changedProps.Emplace(GET_MEMBER_NAME_CHECKED(FVector2D, Y));
-	
+
 	if (changedProps.Contains(propertyName))
 	{
-		InitializeGrid();
+		UpdateNodes();
 		//CreateBlockedCenter();
 		SetBlockedRegions();
 	}
@@ -55,7 +58,7 @@ void AGridCreator::PostEditChangeProperty(FPropertyChangedEvent& PropertyChanged
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
 
-void AGridCreator::InitializeGrid() 
+void AGridCreator::InitializeGrid()
 {
 	for (int i = 0; i < PathGrid.Num(); ++i)
 	{
@@ -68,25 +71,19 @@ void AGridCreator::InitializeGrid()
 	PathGrid.Empty();
 	PathGrid.Reserve(GridHeight * GridWidth);
 
-	if (IsValid(NodeMesh) && IsValid(WalkableNodeMaterial))
+	for (int i = 0; i < GridHeight; ++i)
 	{
-		for (int i = 0; i < GridHeight; ++i)
+		for (int j = 0; j < GridWidth; ++j)
 		{
-			for (int j = 0; j < GridWidth; ++j)
-			{
-				FName NodeName = FName(TEXT("GridNode"), i * GridHeight + j);
-				UStaticMeshComponent* currentNodeMesh = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass(), NodeName);
+			FName NodeName = FName(TEXT("GridNode"), i * GridHeight + j);
+			UStaticMeshComponent* currentNodeMesh = CreateDefaultSubobject<UStaticMeshComponent>(NodeName);
 
-				if (IsValid(currentNodeMesh))
-				{
-					currentNodeMesh->SetStaticMesh(NodeMesh);
-					currentNodeMesh->SetMaterial(0, WalkableNodeMaterial);
-					FVector nodePosition = FVector(j * 125, i * 125, 0);
-					currentNodeMesh->SetRelativeLocation(nodePosition);
-					PathGrid.Emplace(currentNodeMesh);
-					currentNodeMesh->RegisterComponent();
-					currentNodeMesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
-				}
+			if (IsValid(currentNodeMesh))
+			{
+				FVector nodePosition = FVector(j * 125, i * 125, 0);
+				currentNodeMesh->SetRelativeLocation(nodePosition);
+				PathGrid.Emplace(currentNodeMesh);
+				currentNodeMesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
 			}
 		}
 	}
@@ -126,7 +123,7 @@ void AGridCreator::CreateBlockedCenter()
 
 void AGridCreator::SetBlockedRegions()
 {
-	if (IsValid(NonWalkableNodeMaterial) && IsValid(NodeMesh))
+	if (IsValid(NonWalkableNodeMaterial) && PathGrid.Num() > 0)
 	{
 		for (int i = 0; i < BlockedRegions.Num(); ++i)
 		{
@@ -136,7 +133,7 @@ void AGridCreator::SetBlockedRegions()
 				for (int k = FGenericPlatformMath::Max((int)BlockedRegions[i].center.X - BlockedRegions[i].radius, 0);
 					k <= FGenericPlatformMath::Min((int)BlockedRegions[i].center.X + BlockedRegions[i].radius, GridWidth - 1); ++k)
 				{
-					if (FGenericPlatformMath::Pow(BlockedRegions[i].center.Y - j, 2) + FGenericPlatformMath::Pow(BlockedRegions[i].center.X - k, 2) <= FGenericPlatformMath::Pow(BlockedRegions[i].radius, 2))
+					if (FGenericPlatformMath::Pow(BlockedRegions[i].center.Y - j, 2) + FGenericPlatformMath::Pow(BlockedRegions[i].center.X - k, 2) <= FGenericPlatformMath::Pow(BlockedRegions[i].radius + 0.5, 2))
 					{
 						if (IsValid(PathGrid[j * GridHeight + k]))
 						{
@@ -149,7 +146,7 @@ void AGridCreator::SetBlockedRegions()
 	}
 }
 
-void AGridCreator::CalculateShortestPath() 
+void AGridCreator::CalculateShortestPath()
 {
 	TArray<int> previousNodes;
 	TArray<float> distances;
@@ -164,7 +161,7 @@ void AGridCreator::CalculateShortestPath()
 		distances.Add(GridHeight * GridWidth);
 		previousNodes.Add(NULL);
 
-		if (PathGrid[i]->GetMaterial(0) == WalkableNodeMaterial) 
+		if (PathGrid[i]->GetMaterial(0) == WalkableNodeMaterial)
 		{
 			visitedNodes.Add(false);
 		}
@@ -186,9 +183,9 @@ void AGridCreator::CalculateShortestPath()
 		for (int i = 0; i < neighbors.Num(); ++i)
 		{
 			int currentNeighborIndex = neighbors[i].Y * GridHeight + neighbors[i].X;
-			
+
 			float currentDistance = GetDistance(currentNode, neighbors[i]) + distances[currentNodeIndex];
-			
+
 			if (distances[currentNeighborIndex] > currentDistance)
 			{
 				distances[currentNeighborIndex] = currentDistance;
@@ -197,9 +194,9 @@ void AGridCreator::CalculateShortestPath()
 		}
 
 		visitedNodes[currentNodeIndex] = true;
-		currentNode = GetMinDistanceUnvisitedNode(distances,visitedNodes);
+		currentNode = GetMinDistanceUnvisitedNode(distances, visitedNodes);
 	}
-	
+
 	if (currentNode == Target)
 	{
 		int sourceIndex = Source.Y * GridHeight + Source.X;
@@ -214,7 +211,7 @@ void AGridCreator::CalculateShortestPath()
 	}
 }
 
-bool AGridCreator::AnyUnvisited(TArray<bool> graph) 
+bool AGridCreator::AnyUnvisited(TArray<bool> graph)
 {
 	for (int i = 0; i < graph.Num(); ++i)
 	{
@@ -233,7 +230,7 @@ float AGridCreator::GetDistance(FVector2D u, FVector2D v)
 	{
 		return FGenericPlatformMath::Sqrt(2);
 	}
-	else 
+	else
 	{
 		return 1;
 	}
@@ -243,9 +240,9 @@ TArray<FVector2D> AGridCreator::GetNeighbors(FVector2D source, TArray<bool> grap
 {
 	TArray<FVector2D> neighbors;
 
-	for (int y = FGenericPlatformMath::Max((int)source.Y - 1, 0); y <= FGenericPlatformMath::Min((int)source.Y + 1, GridHeight -1); ++y)
+	for (int y = FGenericPlatformMath::Max((int)source.Y - 1, 0); y <= FGenericPlatformMath::Min((int)source.Y + 1, GridHeight - 1); ++y)
 	{
-		for (int x = FGenericPlatformMath::Max((int)source.X - 1, 0); x <= FGenericPlatformMath::Min((int)source.X + 1, GridWidth -1); ++x)
+		for (int x = FGenericPlatformMath::Max((int)source.X - 1, 0); x <= FGenericPlatformMath::Min((int)source.X + 1, GridWidth - 1); ++x)
 		{
 			if (!graph[y * GridHeight + x] && (x != source.X || y != source.Y))
 			{
@@ -257,7 +254,7 @@ TArray<FVector2D> AGridCreator::GetNeighbors(FVector2D source, TArray<bool> grap
 	return neighbors;
 }
 
-FVector2D AGridCreator::GetMinDistanceUnvisitedNode(TArray<float> distances, TArray<bool> visitedNodes) 
+FVector2D AGridCreator::GetMinDistanceUnvisitedNode(TArray<float> distances, TArray<bool> visitedNodes)
 {
 	float minDistance = GridHeight * GridWidth;
 	FVector2D minDistanceNode;
