@@ -6,17 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "GridCreator.generated.h"
 
-USTRUCT()
-struct FGraphNode
-{
-	GENERATED_BODY()
-public:
-	FVector2D position;
-	bool visited;
-	float distance;
-	FVector2D previousNode;
-};
-
 USTRUCT(BlueprintType)
 struct FBlockedRegion
 {
