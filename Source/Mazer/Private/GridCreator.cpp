@@ -14,6 +14,8 @@ AGridCreator::AGridCreator(const class FObjectInitializer& ObjectInitializer) : 
 
 	GridWidth = 10;
 	GridHeight = 10;
+	NodeVerticalDistance = 125;
+	NodeHorizontalDistance = 125;
 	InitializeGrid();
 	UpdateNodes();
 	SetBlockedRegions();
@@ -24,8 +26,6 @@ AGridCreator::AGridCreator(const class FObjectInitializer& ObjectInitializer) : 
 void AGridCreator::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CalculateShortestPath();
 }
 
 
@@ -35,6 +35,7 @@ void AGridCreator::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+#if WITH_EDITOR
 void AGridCreator::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
 	FName propertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
@@ -57,6 +58,7 @@ void AGridCreator::PostEditChangeProperty(FPropertyChangedEvent& PropertyChanged
 
 	Super::PostEditChangeProperty(PropertyChangedEvent);
 }
+#endif
 
 void AGridCreator::InitializeGrid()
 {
@@ -80,7 +82,7 @@ void AGridCreator::InitializeGrid()
 
 			if (IsValid(currentNodeMesh))
 			{
-				FVector nodePosition = FVector(j * 125, i * 125, 0);
+				FVector nodePosition = FVector(j * NodeHorizontalDistance, i * NodeVerticalDistance, 0);
 				currentNodeMesh->SetRelativeLocation(nodePosition);
 				PathGrid.Emplace(currentNodeMesh);
 				currentNodeMesh->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
@@ -146,7 +148,7 @@ void AGridCreator::SetBlockedRegions()
 	}
 }
 
-void AGridCreator::CalculateShortestPath()
+TArray<FVector2D> AGridCreator::CalculateShortestPath(FVector2D source, FVector2D target)
 {
 	TArray<int> previousNodes;
 	TArray<float> distances;
@@ -171,10 +173,11 @@ void AGridCreator::CalculateShortestPath()
 		}
 	}
 
-	distances[Source.Y * GridHeight + Source.X] = 0;
-	FVector2D currentNode = Source;
+	int sourceIndex = source.Y * GridHeight + source.X;
+	distances[sourceIndex] = 0;
+	FVector2D currentNode = source;
 
-	while (AnyUnvisited(visitedNodes) == true && currentNode != Target)
+	while (AnyUnvisited(visitedNodes) == true && currentNode != target)
 	{
 		int currentNodeIndex = currentNode.Y * GridHeight + currentNode.X;
 		FVector2D minDistanceNeighbor;
@@ -197,18 +200,23 @@ void AGridCreator::CalculateShortestPath()
 		currentNode = GetMinDistanceUnvisitedNode(distances, visitedNodes);
 	}
 
-	if (currentNode == Target)
+	TArray<FVector2D> path;
+
+	if (currentNode == target)
 	{
-		int sourceIndex = Source.Y * GridHeight + Source.X;
 		int nodeIndex = currentNode.Y * GridHeight + currentNode.X;
 		PathGrid[nodeIndex]->SetMaterial(0, PathMaterial);
+		path.Emplace(target);
 
 		while (nodeIndex != sourceIndex)
 		{
 			nodeIndex = previousNodes[nodeIndex];
 			PathGrid[nodeIndex]->SetMaterial(0, PathMaterial);
+			path.EmplaceAt(0, FVector2D(nodeIndex / GridHeight, nodeIndex % GridWidth));
 		}
 	}
+
+	return path;
 }
 
 bool AGridCreator::AnyUnvisited(TArray<bool> graph)
@@ -263,7 +271,7 @@ FVector2D AGridCreator::GetMinDistanceUnvisitedNode(TArray<float> distances, TAr
 	{
 		if (!visitedNodes[i] && distances[i] < minDistance)
 		{
-			minDistanceNode.X = i % GridHeight;
+			minDistanceNode.X = i % GridWidth;
 			minDistanceNode.Y = i / GridHeight;
 			minDistance = distances[i];
 		}

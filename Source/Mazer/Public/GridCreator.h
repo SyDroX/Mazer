@@ -32,6 +32,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
 	int32 GridHeight;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
+	int32 NodeHorizontalDistance;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
+	int32 NodeVerticalDistance;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SceneRoot")
 	USceneComponent* Root;
 
@@ -53,23 +59,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
 	TArray<FBlockedRegion> BlockedRegions;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
-	TArray<FVector2D> Path;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
-	FVector2D Source;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Grid")
-	FVector2D Target;
-
 protected:
 	virtual void BeginPlay() override;
+#if WITH_EDITOR
 	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif
 	void InitializeGrid();
 	void CreateBlockedCenter();
 	void UpdateNodes();
 	void SetBlockedRegions();
-	void CalculateShortestPath();
 	bool AnyUnvisited(TArray<bool> graph);
 	float GetDistance(FVector2D u, FVector2D v);
 	FVector2D GetMinDistanceUnvisitedNode(TArray<float> distances, TArray<bool> visitedNodes);
@@ -78,4 +76,5 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+	TArray<FVector2D> CalculateShortestPath(FVector2D source, FVector2D target);
 };
