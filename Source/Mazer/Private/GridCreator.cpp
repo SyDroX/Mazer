@@ -205,13 +205,13 @@ TArray<FVector2D> AGridCreator::CalculateShortestPath(FVector2D source, FVector2
 	if (currentNode == target)
 	{
 		int nodeIndex = currentNode.Y * GridHeight + currentNode.X;
-		PathGrid[nodeIndex]->SetMaterial(0, PathMaterial);
+		//PathGrid[nodeIndex]->SetMaterial(0, PathMaterial);
 		path.Emplace(target);
 
 		while (nodeIndex != sourceIndex)
 		{
 			nodeIndex = previousNodes[nodeIndex];
-			PathGrid[nodeIndex]->SetMaterial(0, PathMaterial);
+			//PathGrid[nodeIndex]->SetMaterial(0, PathMaterial);
 			path.EmplaceAt(0, FVector2D(nodeIndex / GridHeight, nodeIndex % GridWidth));
 		}
 	}
