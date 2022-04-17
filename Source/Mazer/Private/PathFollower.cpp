@@ -1,30 +1,21 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #include "PathFollower.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 
-// Sets default values
 APathFollower::APathFollower(const class FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = Root;
 	Initialize();
-	zPosition = 100;
-	MoveSpeed = 50;
 }
 
 void APathFollower::Initialize()
 {
-	if (FollowerMeshComponent != NULL)
-	{
-		FollowerMeshComponent->DestroyComponent();
-	}
-
 	FollowerMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Follower"));
 	FollowerMeshComponent->SetRelativeLocation(FVector().ZeroVector);
 	FollowerMeshComponent->AttachToComponent(Root, FAttachmentTransformRules::KeepRelativeTransform);
+	zPosition = 100;
+	MoveSpeed = 50;
 }
 
 #if WITH_EDITOR
@@ -41,7 +32,6 @@ void APathFollower::PostEditChangeProperty(FPropertyChangedEvent& PropertyChange
 }
 #endif
 
-// Called when the game starts or when spawned
 void APathFollower::BeginPlay()
 {
 	Super::BeginPlay();
