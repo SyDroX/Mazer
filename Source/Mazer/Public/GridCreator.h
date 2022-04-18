@@ -10,12 +10,12 @@ USTRUCT(BlueprintType)
 struct FBlockedRegion
 {
 	GENERATED_BODY()
-public:
+	
 	UPROPERTY(EditAnywhere)
-	FVector2D center;
+	FVector2D Center;
 
 	UPROPERTY(EditAnywhere)
-	int radius;
+	int Radius;
 };
 
 UCLASS()
@@ -24,7 +24,7 @@ class MAZER_API AGridCreator : public AActor
 	GENERATED_BODY()
 public:	
 	// Sets default values for this actor's properties
-	AGridCreator(const class FObjectInitializer& ObjectInitializer);
+	AGridCreator(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Grid")
 	int32 GridWidth;
@@ -68,13 +68,12 @@ protected:
 	void CreateBlockedCenter();
 	void UpdateNodes();
 	void SetBlockedRegions();
-	bool AnyUnvisited(TArray<bool> graph);
-	float GetDistance(FVector2D u, FVector2D v);
-	FVector2D GetMinDistanceUnvisitedNode(TArray<float> distances, TArray<bool> visitedNodes);
-	TArray<FVector2D> GetNeighbors(FVector2D source, TArray<bool> graph);
+	bool AnyUnvisited(TArray<bool> graph) const;
+	float GetDistance(FVector2D u, FVector2D v) const;
+	FVector2D GetMinDistanceUnvisitedNode(TArray<float> distances, TArray<bool> visitedNodes) const;
+	TArray<FVector2D> GetNeighbors(FVector2D source, TArray<bool> graph) const;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	TArray<FVector2D> CalculateShortestPath(FVector2D source, FVector2D target);
+	TArray<FVector2D> CalculateShortestPath(FVector2D source, FVector2D target) const;
 };

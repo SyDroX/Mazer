@@ -21,7 +21,7 @@ void APathFollower::Initialize()
 #if WITH_EDITOR
 void APathFollower::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
-	FName propertyName = (PropertyChangedEvent.Property != NULL) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
+	const FName propertyName = (PropertyChangedEvent.Property != nullptr) ? PropertyChangedEvent.Property->GetFName() : NAME_None;
 
 	if (propertyName == GET_MEMBER_NAME_CHECKED(APathFollower, FollowerMeshComponent)) 
 	{
@@ -39,11 +39,15 @@ void APathFollower::BeginPlay()
 	
 	if (Path.Num() > 0)
 	{
-		CurrentPosition = FVector(Path[0].Y * GridCreator->NodeVerticalDistance, Path[0].X * GridCreator->NodeHorizontalDistance, zPosition);
+		CurrentPosition = FVector(Path[0].Y * GridCreator->NodeVerticalDistance,
+								  Path[0].X * GridCreator->NodeHorizontalDistance,
+								  zPosition);
 		Path.RemoveAt(0);
 
 		CurrentTargetNode = Path[0];
-		CurrentTargetPosition = FVector(CurrentTargetNode.Y * GridCreator->NodeVerticalDistance, CurrentTargetNode.X * GridCreator->NodeHorizontalDistance, zPosition);
+		CurrentTargetPosition = FVector(CurrentTargetNode.Y * GridCreator->NodeVerticalDistance,
+										CurrentTargetNode.X * GridCreator->NodeHorizontalDistance,
+										zPosition);
 
 		PreviousDistance = 999999.0f;
 		ReachedTarget = false;
@@ -56,7 +60,9 @@ void APathFollower::UpdateTarget()
 	if (Path.Num() > 0)
 	{
 		CurrentTargetNode = Path[0];
-		CurrentTargetPosition = FVector(CurrentTargetNode.Y * GridCreator->NodeVerticalDistance, CurrentTargetNode.X * GridCreator->NodeHorizontalDistance, zPosition);	
+		CurrentTargetPosition = FVector(CurrentTargetNode.Y * GridCreator->NodeVerticalDistance,
+										CurrentTargetNode.X * GridCreator->NodeHorizontalDistance,
+										zPosition);	
 		Path.RemoveAt(0);
 		
 	}
@@ -78,9 +84,9 @@ void APathFollower::Tick(float DeltaTime)
 		return;
 	}
 	
-	DeltaTime = 0.033;
-	
-	float currentDistance = FVector::Distance(CurrentPosition, CurrentTargetPosition);
+	//DeltaTime = 0.033;
+
+	const float currentDistance = FVector::Distance(CurrentPosition, CurrentTargetPosition);
 
 	if (currentDistance <= PreviousDistance)
 	{

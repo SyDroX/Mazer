@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -12,12 +10,11 @@ UCLASS()
 class MAZER_API ASplinePath : public AActor
 {
 	GENERATED_BODY()
-private:
-	float timeTraveled;
+	
+	float TimeTraveled;
 	TArray<FVector2D> SplinePoints;
 public:	
-	// Sets default values for this actor's properties
-	ASplinePath(const class FObjectInitializer& ObjectInitializer);
+	ASplinePath(const FObjectInitializer& ObjectInitializer);
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Spline")
 	USplineComponent* SplinePath;
@@ -38,11 +35,8 @@ public:
 	float MoveSpeed;
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-	
 };
