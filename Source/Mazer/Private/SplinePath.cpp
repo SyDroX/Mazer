@@ -4,7 +4,6 @@
 ASplinePath::ASplinePath(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
-
 	SplinePath = CreateDefaultSubobject<USplineComponent>("Spline");
 
 	if (IsValid(SplinePath))
@@ -12,7 +11,7 @@ ASplinePath::ASplinePath(const FObjectInitializer& ObjectInitializer) : Super(Ob
 		SetRootComponent(SplinePath);
 		MoveSpeed = 1;
 	}
-
+	
 	FollowerMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>("SplineFollower");
 	FollowerMeshComponent->AttachToComponent(SplinePath, FAttachmentTransformRules::KeepRelativeTransform);
 	FollowerMeshComponent->SetRelativeLocation(FVector().ZeroVector);
@@ -38,7 +37,7 @@ void ASplinePath::Tick(float DeltaTime)
 	
 	if (TimeTraveled <= SplinePath->GetSplineLength())
 	{
-		const FVector currentPosition = SplinePath->GetLocationAtTime(TimeTraveled, ESplineCoordinateSpace::Local, true);
+		const FVector currentPosition = SplinePath->GetLocationAtDistanceAlongSpline(TimeTraveled, ESplineCoordinateSpace::Local);
 		TimeTraveled += DeltaTime * MoveSpeed;
 		FollowerMeshComponent->SetRelativeLocation(currentPosition);
 	}
