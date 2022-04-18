@@ -45,13 +45,11 @@ void APathFollower::BeginPlay()
 		Path.RemoveAt(0);
 
 		CurrentTargetNode = Path[0];
+		PreviousPosition = CurrentPosition;
 		CurrentTargetPosition = FVector(CurrentTargetNode.Y * GridCreator->NodeVerticalDistance,
 										CurrentTargetNode.X * GridCreator->NodeHorizontalDistance,
 										zPosition);
-
-		PreviousDistance = 999999.0f;
 		ReachedTarget = false;
-		//UpdateTarget();
 	}
 }
 
@@ -59,6 +57,7 @@ void APathFollower::UpdateTarget()
 {
 	if (Path.Num() > 0)
 	{
+		PreviousPosition = CurrentTargetPosition;
 		CurrentTargetNode = Path[0];
 		CurrentTargetPosition = FVector(CurrentTargetNode.Y * GridCreator->NodeVerticalDistance,
 										CurrentTargetNode.X * GridCreator->NodeHorizontalDistance,
@@ -86,19 +85,16 @@ void APathFollower::Tick(float DeltaTime)
 	
 	//DeltaTime = 0.033;
 
-	const float currentDistance = FVector::Distance(CurrentPosition, CurrentTargetPosition);
-
-	if (currentDistance <= PreviousDistance)
+	const float currentDotProduct = FVector::DotProduct(CurrentTargetPosition-CurrentPosition, CurrentTargetPosition-PreviousPosition);
+	
+	if (currentDotProduct > 0)
 	{
 		CurrentPosition += FVector(CurrentTargetPosition - CurrentPosition).GetSafeNormal() * DeltaTime * MoveSpeed;
-		CurrentPosition.Z = zPosition;
 		RootComponent->SetWorldLocation(CurrentPosition);
-		PreviousDistance = currentDistance;
 	}
 	else 
 	{
 		UpdateTarget();
-		PreviousDistance = 999999.0f;
 	}
 }
 

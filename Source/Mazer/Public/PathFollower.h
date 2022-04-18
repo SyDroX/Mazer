@@ -9,6 +9,7 @@ UCLASS()
 class MAZER_API APathFollower : public AActor
 {
 	GENERATED_BODY()
+	FVector PreviousPosition;
 	FVector CurrentPosition;
 	FVector CurrentTargetPosition;
 	FVector2D CurrentTargetNode;
