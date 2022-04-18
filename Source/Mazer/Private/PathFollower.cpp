@@ -1,7 +1,7 @@
 #include "PathFollower.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 
-APathFollower::APathFollower(const class FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+APathFollower::APathFollower(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));

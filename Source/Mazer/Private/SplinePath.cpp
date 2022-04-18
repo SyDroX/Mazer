@@ -1,7 +1,7 @@
 #include "SplinePath.h"
 #include "Components/SplineMeshComponent.h"
 
-ASplinePath::ASplinePath(const class FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+ASplinePath::ASplinePath(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
